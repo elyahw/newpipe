@@ -808,20 +808,59 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
     private void search(final String theSearchString,
                         final String[] theContentFilter,
                         final String theSortFilter) {
+
+        // Elias: This function disables the search button.
+
+        // final String ssCopy = theSearchString; // original;
+
+        String ssCopy = ""; // ELIAS TODO: how to modify this string???
+        // TODO: import banned terms from e2g lists
+
+        /*
+            // Elias: Not working!
+            String ssCopy = theSearchString.toString();
+            ssCopy.toLowerCase();
+
+            String[] arr = { "the", "ban", "ora" };
+
+            for (int i = 0; i < arr.length; i++)
+            {
+                Log.d(TAG, "============== term = [" + arr[i] + "] ........................");
+
+                ssCopy.replace(arr[i],"");
+                Log.d(TAG, "============== NEW STRING = [" + ssCopy + "] ........................");
+            }
+        */
+
+        /*
+            String[] arr = { "Apple", "Banana", "Orange" };
+
+            // First method
+            for (String i : arr) {
+                System.out.print(i + " ");
+            }
+
+            // Second method
+            for (int i = 0; i < arr.length; i++) {
+                System.out.print(arr[i] + " ");
+            }
+        */
+
+
         if (DEBUG) {
-            Log.d(TAG, "search() called with: query = [" + theSearchString + "]");
+            Log.d(TAG, "search() called with: query = [" + ssCopy + "]");
         }
-        if (theSearchString.isEmpty()) {
+        if (ssCopy.isEmpty()) {
             return;
         }
 
         try {
-            final StreamingService streamingService = NewPipe.getServiceByUrl(theSearchString);
+            final StreamingService streamingService = NewPipe.getServiceByUrl(ssCopy);
             if (streamingService != null) {
                 showLoading();
                 disposables.add(Observable
                         .fromCallable(() -> NavigationHelper.getIntentByLink(activity,
-                                streamingService, theSearchString))
+                                streamingService, ssCopy))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe(intent -> {
@@ -835,21 +874,21 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         }
 
         lastSearchedString = this.searchString;
-        this.searchString = theSearchString;
+        this.searchString = ssCopy;
         infoListAdapter.clearStreamItemList();
         hideSuggestionsPanel();
         showMetaInfoInTextView(null, searchBinding.searchMetaInfoTextView,
                 searchBinding.searchMetaInfoSeparator, disposables);
         hideKeyboardSearch();
 
-        disposables.add(historyRecordManager.onSearched(serviceId, theSearchString)
+        disposables.add(historyRecordManager.onSearched(serviceId, ssCopy)
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         ignored -> { },
                         throwable -> showSnackBarError(new ErrorInfo(throwable, UserAction.SEARCHED,
-                                theSearchString, serviceId))
+                                ssCopy, serviceId))
                 ));
-        suggestionPublisher.onNext(theSearchString);
+        suggestionPublisher.onNext(ssCopy);
         startLoading(false);
     }
 
@@ -883,7 +922,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         }
         searchDisposable = ExtractorHelper.getMoreSearchItems(
                 serviceId,
-                searchString,
+                searchString, // ELIAS use "" instead
                 asList(contentFilter),
                 sortFilter,
                 nextPage)
@@ -895,7 +934,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
 
     @Override
     protected boolean hasMoreItems() {
-        return Page.isValid(nextPage);
+        return Page.isValid(nextPage); // ELIAS return false;
     }
 
     @Override
@@ -933,7 +972,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
                           final String[] theContentFilter,
                           final String theSortFilter) {
         serviceId = theServiceId;
-        searchString = theSearchString;
+        searchString = theSearchString; // ELIAS searchString = "";
         contentFilter = theContentFilter;
         sortFilter = theSortFilter;
     }

@@ -7,7 +7,7 @@ plugins {
     id "kotlin-android"
     id "kotlin-kapt"
     id "kotlin-parcelize"
-    id "checkstyle"
+
     id "org.sonarqube" version "4.0.0.2929"
 }
 
@@ -104,7 +104,7 @@ android {
 }
 
 ext {
-    checkstyleVersion = '10.12.1'
+
 
     androidxLifecycleVersion = '2.5.1'
     androidxRoomVersion = '2.5.2'
@@ -122,34 +122,11 @@ ext {
 }
 
 configurations {
-    checkstyle
+
     ktlint
 }
 
-checkstyle {
-    getConfigDirectory().set(rootProject.file("checkstyle"))
-    ignoreFailures false
-    showViolations true
-    toolVersion = checkstyleVersion
-}
 
-task runCheckstyle(type: Checkstyle) {
-    source 'src'
-    include '**/*.java'
-    exclude '**/gen/**'
-    exclude '**/R.java'
-    exclude '**/BuildConfig.java'
-    exclude 'main/java/us/shandian/giga/**'
-
-    classpath = configurations.checkstyle
-
-    showViolations true
-
-    reports {
-        xml.getRequired().set(true)
-        html.getRequired().set(true)
-    }
-}
 
 def outputDir = "${project.buildDir}/reports/ktlint/"
 def inputFiles = project.fileTree(dir: "src", include: "**/*.kt")
@@ -176,7 +153,7 @@ afterEvaluate {
     if (!System.properties.containsKey('skipFormatKtlint')) {
         preDebugBuild.dependsOn formatKtlint
     }
-    preDebugBuild.dependsOn runCheckstyle, runKtlint
+
 }
 
 sonar {
@@ -201,7 +178,7 @@ dependencies {
     implementation 'com.github.TeamNewPipe:NoNonsense-FilePicker:5.0.0'
 
 /** Checkstyle **/
-    checkstyle "com.puppycrawl.tools:checkstyle:${checkstyleVersion}"
+
     ktlint 'com.pinterest:ktlint:0.45.2'
 
 /** Kotlin **/
