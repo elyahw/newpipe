@@ -167,6 +167,10 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
 
     /*////////////////////////////////////////////////////////////////////////*/
 
+    /**
+     * TextWatcher to remove rich-text formatting on the search EditText when pasting content
+     * from the clipboard.
+     */
     private TextWatcher textWatcher;
 
     public static SearchFragment getInstance(final int serviceId, final String searchString) {
@@ -583,11 +587,13 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
             @Override
             public void beforeTextChanged(final CharSequence s, final int start,
                                           final int count, final int after) {
+                // Do nothing, old text is already clean
             }
 
             @Override
             public void onTextChanged(final CharSequence s, final int start,
                                       final int before, final int count) {
+                // Changes are handled in afterTextChanged; CharSequence cannot be changed here.
             }
 
             @Override
@@ -799,8 +805,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         // no-op
     }
 
-    // ELIAS: modified function:
-    /*private void search(final String theSearchString,
+    private void search(final String theSearchString,
                         final String[] theContentFilter,
                         final String theSortFilter) {
         if (DEBUG) {
@@ -864,55 +869,6 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
                 .doOnEvent((searchResult, throwable) -> isLoading.set(false))
                 .subscribe(this::handleResult, this::onItemError);
 
-    } */
-
-    // ELIAS: modified function:
-    private void search(final String theSearchString,
-                        final String[] theContentFilter,
-                        final String theSortFilter) {
-        if (DEBUG) {
-            Log.d(TAG, "search() called with: query = [" + theSearchString + "]");
-        }
-        if (theSearchString.isEmpty()) {
-            return;
-        }
-
-        try {
-            final StreamingService streamingService = NewPipe.getServiceByUrl("");
-            if (streamingService != null) {
-                showLoading();
-                disposables.add(Observable
-                        .fromCallable(() -> NavigationHelper.getIntentByLink(activity,
-                                streamingService, ""))
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribe(intent -> {
-                            getFM().popBackStackImmediate();
-                            activity.startActivity(intent);
-                        }, throwable -> showTextError(getString(R.string.unsupported_url))));
-                return;
-            }
-        } catch (final Exception ignored) {
-            // Exception occurred, it's not a url
-        }
-
-        lastSearchedString = "";
-        this.searchString = "";
-        infoListAdapter.clearStreamItemList();
-        hideSuggestionsPanel();
-        showMetaInfoInTextView(null, searchBinding.searchMetaInfoTextView,
-                searchBinding.searchMetaInfoSeparator, disposables);
-        hideKeyboardSearch();
-
-        disposables.add(historyRecordManager.onSearched(serviceId, "")
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        ignored -> { },
-                        throwable -> showSnackBarError(new ErrorInfo(throwable, UserAction.SEARCHED,
-                                "", serviceId))
-                ));
-        suggestionPublisher.onNext("");
-        startLoading(false);
     }
 
     @Override
@@ -927,7 +883,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
         }
         searchDisposable = ExtractorHelper.getMoreSearchItems(
                 serviceId,
-                "", // searchString, // Elias
+                searchString,
                 asList(contentFilter),
                 sortFilter,
                 nextPage)
@@ -939,7 +895,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
 
     @Override
     protected boolean hasMoreItems() {
-        return false; // Page.isValid(nextPage);
+        return Page.isValid(nextPage);
     }
 
     @Override
@@ -977,8 +933,7 @@ public class SearchFragment extends BaseListFragment<SearchInfo, ListExtractor.I
                           final String[] theContentFilter,
                           final String theSortFilter) {
         serviceId = theServiceId;
-        // ELIAS:
-        searchString = ""; // theSearchString;
+        searchString = theSearchString;
         contentFilter = theContentFilter;
         sortFilter = theSortFilter;
     }

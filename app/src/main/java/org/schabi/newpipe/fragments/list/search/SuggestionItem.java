@@ -7,16 +7,15 @@ public class SuggestionItem {
     public final String query;
 
     public SuggestionItem(final boolean fromHistory, final String query) {
-// Elias: OR: (hides all suggestions)
-        this.fromHistory = false; // fromHistory;
-        this.query = ""; // query;
+        this.fromHistory = fromHistory;
+        this.query = query;
     }
 
     @Override
     public boolean equals(final Object o) {
-//        if (o instanceof SuggestionItem) {
-//            return query.equals(((SuggestionItem) o).query);
-//        }
+        if (o instanceof SuggestionItem) {
+            return query.equals(((SuggestionItem) o).query);
+        }
         return false;
     }
 
